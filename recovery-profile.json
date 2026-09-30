@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "profileVersion": 1,
+  "profileVersion": 2,
   "id": "letterpress",
   "app": "letterpress",
   "stateful": true,
@@ -12,9 +12,22 @@
       "restoreOwner": "letterpress",
       "bindings": [
         {
-          "type": "directory",
+          "type": "sqlite",
           "root": "data",
-          "path": "."
+          "path": "studio.sqlite"
+        }
+      ]
+    },
+    {
+      "id": "account-encryption-keys",
+      "kind": "key",
+      "required": false,
+      "restoreOwner": "letterpress",
+      "bindings": [
+        {
+          "type": "key-directory",
+          "root": "data",
+          "path": "keys"
         }
       ]
     }
