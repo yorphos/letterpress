@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "profileVersion": 1,
+  "id": "letterpress",
+  "app": "letterpress",
+  "stateful": true,
+  "components": [
+    {
+      "id": "studio-data",
+      "kind": "store",
+      "required": true,
+      "restoreOwner": "letterpress",
+      "bindings": [
+        {
+          "type": "directory",
+          "root": "data",
+          "path": "."
+        }
+      ]
+    }
+  ]
+}
