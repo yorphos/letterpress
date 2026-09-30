@@ -26,6 +26,13 @@ test("public repertoire is responsive, branded, and keyboard usable", async ({
     path: "test-results/public-" + test.info().project.name + ".png",
     fullPage: true,
   });
+  await page
+    .getByRole("button", { name: "Switch to dark appearance", exact: true })
+    .click();
+  await expect(page.locator("html")).toHaveAttribute("data-pf-theme", "dark");
+  await page
+    .getByRole("button", { name: "Switch to light appearance", exact: true })
+    .click();
   expect(errors).toEqual([]);
 });
 test("account workflow saves, publishes, comments, exports and invites safely", async ({
@@ -153,13 +160,11 @@ test("an account reviews exact email and attachments before one recorded send", 
     .getByRole("button", { name: "Save encrypted connection", exact: true })
     .click();
   await page.keyboard.press("Escape");
-  await page
-    .locator('.project-footer input[type="file"]')
-    .setInputFiles({
-      name: "evidence.txt",
-      mimeType: "text/plain",
-      buffer: Buffer.from("Checked source evidence"),
-    });
+  await page.locator('.project-footer input[type="file"]').setInputFiles({
+    name: "evidence.txt",
+    mimeType: "text/plain",
+    buffer: Buffer.from("Checked source evidence"),
+  });
   await expect(
     page.getByRole("link", { name: "evidence.txt", exact: true }),
   ).toBeVisible();
@@ -186,4 +191,62 @@ test("an account reviews exact email and attachments before one recorded send", 
   await expect(page.locator(".review-panel")).toContainText(
     "accepted by server",
   );
+});
+
+test("rich text and a web deck remain editable through save and export", async ({
+  page,
+}) => {
+  await page.goto("app");
+  await page
+    .getByRole("button", { name: "New workspace", exact: true })
+    .click();
+  await page.getByLabel("Workspace name").fill("Publication workflow");
+  await page
+    .getByRole("button", { name: "Create workspace", exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: "Create a project", exact: true })
+    .click();
+  await page
+    .getByRole("textbox", { name: "Project name", exact: true })
+    .fill("Document and deck");
+  await page
+    .getByRole("button", { name: "Create project", exact: true })
+    .click();
+  await expect(page.locator(".tiptap")).toBeVisible();
+  await page
+    .locator(".tiptap")
+    .fill("A precise handoff for the next developer.");
+  await page.getByRole("button", { name: "Table", exact: true }).click();
+  await expect(page.locator(".tiptap table")).toBeVisible();
+  await page.getByRole("button", { name: "Save changes", exact: true }).click();
+  await expect(page.getByText("Saved · Revision 2")).toBeVisible();
+  await page
+    .getByRole("button", { name: "Presentations", exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: "Use presentation mode", exact: true })
+    .click();
+  await page.getByLabel("Starting template").selectOption("Technical overview");
+  await page
+    .getByRole("button", {
+      name: "Apply starting template · replace current content",
+      exact: true,
+    })
+    .click();
+  await page.getByRole("button", { name: "Save changes", exact: true }).click();
+  const preview = page.getByLabel("Presentation preview");
+  await preview.focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(preview).toContainText("Architecture");
+  await page.getByRole("button", { name: "Export", exact: true }).click();
+  const pending = page.waitForEvent("download");
+  await page
+    .getByRole("button", { name: "Document or web deck · HTML", exact: true })
+    .click();
+  const downloaded = await pending;
+  const html = await readFile((await downloaded.path())!, "utf8");
+  expect(html).toContain("System context");
+  expect(html).toContain("Architecture");
+  expect(html).toContain("size:1280px 720px");
 });

@@ -1,29 +1,46 @@
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { TableKit } from "@tiptap/extension-table";
 import Image from "@tiptap/extension-image";
 import type { EditorProps } from "../vendor/professional/react/studio";
+import { validateContent } from "../shared/domain.js";
 export default function RichEditor({ data, onChange, readonly }: EditorProps) {
   const latest = useRef(data);
   latest.current = data;
+  const [error, setError] = useState("");
   const editor = useEditor({
     extensions: [StarterKit, TableKit, Image.configure({ allowBase64: true })],
     content: data.content,
     editable: !readonly,
     immediatelyRender: false,
-    onUpdate: ({ editor }) =>
-      onChange({ ...latest.current, content: editor.getJSON() }),
+    onUpdate: ({ editor }) => {
+      try {
+        const content = validateContent(editor.getJSON());
+        setError("");
+        onChange({ ...latest.current, content });
+      } catch (e: any) {
+        setError(e.message);
+      }
+    },
   });
   useEffect(() => {
     if (editor) {
       editor.setEditable(!readonly);
-      if (JSON.stringify(editor.getJSON()) !== JSON.stringify(data.content))
+      if (
+        JSON.stringify(validateContent(editor.getJSON())) !==
+        JSON.stringify(data.content)
+      )
         editor.commands.setContent(data.content, { emitUpdate: false });
     }
   }, [data.content, readonly, editor]);
   return (
     <>
+      {error && (
+        <p className="feedback error" role="alert">
+          {error}
+        </p>
+      )}
       <div className="editor-toolbar" aria-label="Document formatting">
         {[
           {
