@@ -1,3 +1,4 @@
+import './portfolio-brand.css';
 import { useState, lazy, Suspense } from "react";
 import { Field, Studio } from "../vendor/professional/react/studio";
 import type { Product, EditorProps } from "../vendor/professional/react/studio";
